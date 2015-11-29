@@ -19,7 +19,7 @@ function simpleMIMOsim(varargin)
     par.mod = '16QAM'; % modulation type: 'BPSK','QPSK','16QAM','64QAM'
     par.trials = 10000; % number of Monte-Carlo trials (transmissions)
     par.SNRdB_list = 10:4:42; % list of SNR [dB] values to be simulated
-    par.detector = {'ZF','bMMSE','uMMSE','ML','sML','SIC','MGS'}; % define detector(s) to be simulated 
+    par.detector = {'ZF','bMMSE','uMMSE','ML','sML','SIC','MGS','MGS-MR'}; % define detector(s) to be simulated 
     par.algotime = 0; % calculate individual detector algo time: can only be used if one detector specified
     par.sigmak = 1; % channel variance
     par.cmin = 10; % min iteration after stall event
@@ -156,9 +156,11 @@ function simpleMIMOsim(varargin)
           case 'ZFPC', % Zero Forcing Precoding detection
             [idxhat,bithat] = ZFPC(par,H,y_zfpc);
           case 'MGS', % Mixed Gibbs Sampling
-              %x0 = ones(2*par.MT,1);
-              x0 = par.symbols(randi([1 length(par.symbols)],par.MT,1))';
-            [idxhat,bithat] = mgs(par,H,y,x0,N0);
+            %x0 = ones(2*par.MT,1);
+            x0 = par.symbols(randi([1 length(par.symbols)],par.MT,1))';
+            [idxhat,bithat,~,mgs_beta(t)] = mgs(par,H,y,x0,N0);
+          case 'MGS-MR', % Mixed Gibbs Sampling-Multiple Restart
+            [idxhat,bithat,numRestarts(t),mr_beta(t)] = mgs_mr(par,H,y,N0);
           otherwise,
             error('par.detector type not defined.')      
         end
@@ -197,7 +199,7 @@ function simpleMIMOsim(varargin)
   
   % -- save final results (par and res structure)
     
-  save([ par.simName '_' num2str(par.runId) ],'par','res');    
+  save([ par.simName '_' num2str(par.runId) ],'par','res','mgs_beta','mr_beta','numRestarts');    
     
   % -- show results (generates fairly nice Matlab plot) 
   

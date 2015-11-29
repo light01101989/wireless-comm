@@ -1,4 +1,4 @@
-function [idxhat,bithat] = mgs(par,H,y,x0,N0)
+function [idxhat,bithat,z,beta] = mgs(par,H,y,x0,N0)
     
     H = [real(H) -imag(H);imag(H) real(H)];
     y = [real(y);imag(y)];
@@ -6,7 +6,7 @@ function [idxhat,bithat] = mgs(par,H,y,x0,N0)
     offset = y'*y;
 
     % Intializing constants
-    MAXITER = 16*par.MT;
+    MAXITER = 8*par.MT*sqrt(2^par.Q);
     q = 1/(2*par.MT);
     beta = costFn(x0,H,y,offset);
     z = x0;
@@ -62,7 +62,8 @@ function [cost] = costFn(x,H,y,offset)
 end
 
 function [theta] = stallFn(x,H,y,par,offset,N0)
+    c1=10*par.Q;
     %standMLcost = (costFn(x,H,y,offset) - par.MR*(par.sigmak).^2)/(sqrt(par.MR)*(par.sigmak).^2);
     standMLcost = (costFn(x,H,y,offset) - par.MR*N0)/(sqrt(par.MR)*N0);
-    theta = max(par.cmin,par.c1*exp(standMLcost));
+    theta = max(par.cmin,c1*exp(standMLcost));
 end
