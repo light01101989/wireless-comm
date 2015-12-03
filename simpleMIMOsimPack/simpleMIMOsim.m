@@ -19,7 +19,7 @@ function simpleMIMOsim(varargin)
     par.mod = '16QAM'; % modulation type: 'BPSK','QPSK','16QAM','64QAM'
     par.trials = 10000; % number of Monte-Carlo trials (transmissions)
     par.SNRdB_list = 10:4:42; % list of SNR [dB] values to be simulated
-    par.detector = {'ZF','bMMSE','uMMSE','ML','sML','SIC','MGS','MGS-MR'}; % define detector(s) to be simulated 
+    par.detector = {'ZF','bMMSE','uMMSE','ML','sML','SIC','MGS','MGS-MR','ZF-comp'}; % define detector(s) to be simulated 
     par.algotime = 0; % calculate individual detector algo time: can only be used if one detector specified
     par.sigmak = 1; % channel variance
     par.cmin = 10; % min iteration after stall event
@@ -161,6 +161,8 @@ function simpleMIMOsim(varargin)
             [idxhat,bithat,~,mgs_beta(t)] = mgs(par,H,y,x0,N0);
           case 'MGS-MR', % Mixed Gibbs Sampling-Multiple Restart
             [idxhat,bithat,numRestarts(t),mr_beta(t)] = mgs_mr(par,H,y,N0);
+          case 'ZF-comp', % zero-forcing detection with complexity analysis
+            [idxhat,bithat] = ZF_complexity(par,H,y);
           otherwise,
             error('par.detector type not defined.')      
         end
@@ -199,7 +201,8 @@ function simpleMIMOsim(varargin)
   
   % -- save final results (par and res structure)
     
-  save([ par.simName '_' num2str(par.runId) ],'par','res','mgs_beta','mr_beta','numRestarts');    
+  save([ par.simName '_' num2str(par.runId) ],'par','res');    
+  %save([ par.simName '_' num2str(par.runId) ],'par','res','mgs_beta','mr_beta','numRestarts');    
     
   % -- show results (generates fairly nice Matlab plot) 
   
