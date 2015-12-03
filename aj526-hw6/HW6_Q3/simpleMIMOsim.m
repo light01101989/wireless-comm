@@ -19,9 +19,11 @@ function simpleMIMOsim(varargin)
     par.mod = '16QAM'; % modulation type: 'BPSK','QPSK','16QAM','64QAM'
     par.trials = 10000; % number of Monte-Carlo trials (transmissions)
     par.SNRdB_list = 10:4:42; % list of SNR [dB] values to be simulated
-    par.detector = {'ZF','bMMSE','uMMSE','ML','sML','SIC'}; % define detector(s) to be simulated 
+    par.detector = {'ZF','bMMSE','uMMSE','ML','sML','SIC','MGS','MGS-MR','ZF-comp'}; % define detector(s) to be simulated 
     par.algotime = 0; % calculate individual detector algo time: can only be used if one detector specified
-    
+    par.sigmak = 1; % channel variance
+    par.cmin = 10; % min iteration after stall event
+    par.c1 = 20; % choose c1 based on qam size(higher value for higher QAM)
   else
       
     disp('use custom simulation settings and parameters...')    
@@ -80,7 +82,7 @@ function simpleMIMOsim(varargin)
   bits = randi([0 1],par.MT,par.Q,par.trials);
 
   % symbol vec gen
-  [par.complexs,par.symvec,par.num] = symbol_vec_gen(par);
+  %[par.complexs,par.symvec,par.num] = symbol_vec_gen(par);
 
   % trials loop
   tic
@@ -153,6 +155,14 @@ function simpleMIMOsim(varargin)
             [idxhat,bithat] = BF(par,H,y_bf);
           case 'ZFPC', % Zero Forcing Precoding detection
             [idxhat,bithat] = ZFPC(par,H,y_zfpc);
+          case 'MGS', % Mixed Gibbs Sampling
+            %x0 = ones(2*par.MT,1);
+            x0 = par.symbols(randi([1 length(par.symbols)],par.MT,1))';
+            [idxhat,bithat,~,mgs_beta(t)] = mgs(par,H,y,x0,N0);
+          case 'MGS-MR', % Mixed Gibbs Sampling-Multiple Restart
+            [idxhat,bithat,numRestarts(t),mr_beta(t)] = mgs_mr(par,H,y,N0);
+          case 'ZF-comp', % zero-forcing detection with complexity analysis
+            [idxhat,bithat] = ZF_complexity(par,H,y);
           otherwise,
             error('par.detector type not defined.')      
         end
@@ -192,6 +202,7 @@ function simpleMIMOsim(varargin)
   % -- save final results (par and res structure)
     
   save([ par.simName '_' num2str(par.runId) ],'par','res');    
+  %save([ par.simName '_' num2str(par.runId) ],'par','res','mgs_beta','mr_beta','numRestarts');    
     
   % -- show results (generates fairly nice Matlab plot) 
   
