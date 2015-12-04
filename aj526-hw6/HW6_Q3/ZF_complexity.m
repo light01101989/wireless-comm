@@ -45,5 +45,5 @@ bithat = par.bits(idxhat,:);
 idxhat_nMul = 2*par.MT*length(par.symbols);
 
 nMul = [yMF_nMul G_nMul G_inv_nMul v_nMul idxhat_nMul];
-figure(2)
-bar(nMul)
+%figure(2)
+%bar(nMul)
