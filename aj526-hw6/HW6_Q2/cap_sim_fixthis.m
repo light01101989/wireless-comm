@@ -141,6 +141,13 @@ function cap_sim_fixthis(varargin)
   % |  __|| | | | | |   | |   |  _  ||  __||    /|  __|  | |
   % | |___| |/ / _| |_  | |   | | | || |___| |\ \| |___  |_|
   % \____/|___/  \___/  \_/   \_| |_/\____/\_| \_\____/  (_)
+  num = par.trials*epsilon;
+  for kk=1:length(par.SNRdB_list)
+      temp = sort(res.GCAP(:,kk));
+      res.CG_epsout(kk) = (temp(num)+temp(num+1))/2;
+      temp = sort(res.DCAP(:,kk));
+      res.CD_epsout(kk) = (temp(num)+temp(num+1))/2;
+  end
   
   
   % -- save final results (par and res structure)    
